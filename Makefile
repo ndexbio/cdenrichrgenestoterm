@@ -96,4 +96,5 @@ dockerbuild: dist ## build docker image and store in local repository
 
 dockerpush: dockerbuild ## push image to dockerhub
 	@cv=`grep '__version__' cdenrichrgenestoterm/__init__.py | sed "s/^.*= *'//" | sed "s/'.*//"`; \
+	docker run coleslawndex/cdenrichrgenestoterm:$$cv
 	docker push coleslawndex/cdenrichrgenestoterm:$$cv
