@@ -7,6 +7,10 @@ import json
 import gseapy
 
 
+class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    pass
+
+
 def _parse_arguments(desc, args):
     """
     Parses command line arguments
@@ -14,7 +18,7 @@ def _parse_arguments(desc, args):
     :param args:
     :return:
     """
-    help_fm = argparse.ArgumentDefaultsHelpFormatter
+    help_fm = Formatter
     parser = argparse.ArgumentParser(description=desc,
                                      formatter_class=help_fm)
     parser.add_argument('input',
