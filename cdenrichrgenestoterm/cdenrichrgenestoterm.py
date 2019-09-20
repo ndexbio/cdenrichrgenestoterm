@@ -21,8 +21,6 @@ def _parse_arguments(desc, args):
                         help='comma delimited list of genes in file')
     parser.add_argument('--cutoff', type=float, default=0.05,
                         help='Cutoff value')
-    parser.add_argument('--organism', default='hsapiens',
-                        help='Organism to use')
     parser.add_argument('--tmpdir', default='/tmp',
                         help='Temp directory to hold output from task')
     parser.add_argument('--genesets', default='GO_Biological_Process_2018,'
@@ -65,7 +63,9 @@ def run_enrichr(inputfile, theargs,
     df_result = res.res2d
     if df_result.shape[0] == 0:
         return None
-
+    df_result.sort_values('Adjusted P-value',
+                          ascending=True, inplace=True)
+    df_result.reset_index(drop=True, inplace=True)
     theres = {'name': df_result['Term'][0],
               'source': df_result['Gene_set'][0],
               'p_value': df_result['Adjusted P-value'][0],
@@ -84,10 +84,19 @@ def main(args):
     :rtype: int
     """
     desc = """
-        Running Enrichr via gseapy  with python3!
+        Running Enrichr via gseapy .
 
         Takes file with comma delimited list of genes as input and
-        outputs matching term if any
+        outputs matching term if any in json format:
+        
+        {
+         "name": "TERM",
+         "source": "SOURCE OF TERM",
+         "p_value": "Adjusted P-value from Enrichr",
+         "description": "EMPTY STRING",
+         "intersections": "List of Genes that intersect"
+        }
+        
     """
 
     theargs = _parse_arguments(desc, args[1:])
