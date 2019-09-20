@@ -87,12 +87,13 @@ def main(args):
         Running Enrichr via gseapy .
 
         Takes file with comma delimited list of genes as input and
-        outputs matching term if any in json format:
+        outputs best matching term (as determined by Adjusted P value)
+        if any in json format:
         
         {
          "name": "TERM",
          "source": "SOURCE OF TERM",
-         "p_value": "Adjusted P-value from Enrichr",
+         "p_value": Adjusted P-value from Enrichr,
          "description": "EMPTY STRING",
          "intersections": "List of Genes that intersect"
         }
