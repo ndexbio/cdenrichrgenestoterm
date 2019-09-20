@@ -4,7 +4,10 @@ import os
 import sys
 import argparse
 import json
-import gseapy
+from contextlib import redirect_stdout
+
+with redirect_stdout(sys.stderr):
+    import gseapy
 
 
 class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -61,9 +64,10 @@ def run_enrichr(inputfile, theargs,
     if genes is None or (len(genes) == 1 and len(genes[0].strip()) == 0):
         sys.stderr.write('No genes found in input')
         return None
-    res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets,
-                          cutoff=theargs.cutoff,
-                          no_plot=True, outdir=theargs.tmpdir)
+    with redirect_stdout(sys.stderr):
+        res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets,
+                              cutoff=theargs.cutoff,
+                              no_plot=True, outdir=theargs.tmpdir)
     df_result = res.res2d
     if df_result.shape[0] == 0:
         return None
