@@ -126,12 +126,12 @@ class TestCdenrichrgenestoterm(unittest.TestCase):
             df = pd.DataFrame(columns=['Term',
                                        'Gene_set',
                                        'Adjusted P-value',
-                                       'Genes'],
+                                       'Genes', 'Overlap'],
                               data=[['term1', 'set1',
                                      0.5,
-                                     'B;C'],
+                                     'B;C', '2/25'],
                                     ['term2', 'set2',
-                                     0.3, 'A;C']])
+                                     0.3, 'A;C', '7/9']])
             mockres.res2d = df
             enrichr.enrichr = MagicMock(return_value=mockres)
             tfile = os.path.join(temp_dir, 'foo')
@@ -149,6 +149,7 @@ class TestCdenrichrgenestoterm(unittest.TestCase):
             self.assertEqual(0.3, res['p_value'])
             self.assertEqual('', res['description'])
             self.assertEqual(['A', 'C'], res['intersections'])
+            self.assertEqual(9, res['term_size'])
             enrichr.enrichr.assert_called_once_with(gene_list=['A', 'B', 'C'],
                                                     cutoff=0.05,
                                                     gene_sets=gs,

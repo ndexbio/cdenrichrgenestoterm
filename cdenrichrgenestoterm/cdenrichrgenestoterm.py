@@ -78,6 +78,7 @@ def run_enrichr(inputfile, theargs,
               'source': df_result['Gene_set'][0],
               'p_value': df_result['Adjusted P-value'][0],
               'description': '',
+              'term_size': int(df_result['Overlap'][0][df_result['Overlap'][0].index('/')+1:]),
               'intersections': df_result['Genes'][0].split(';')}
 
     return theres
