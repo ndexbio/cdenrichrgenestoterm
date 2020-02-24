@@ -26,8 +26,8 @@ def _parse_arguments(desc, args):
                                      formatter_class=help_fm)
     parser.add_argument('input',
                         help='comma delimited list of genes in file')
-    parser.add_argument('--cutoff', type=float, default=0.05,
-                        help='Cutoff value')
+    parser.add_argument('--maxpval', type=float, default=0.05,
+                        help='Max p value')
     parser.add_argument('--tmpdir', default='/tmp',
                         help='Temp directory to hold output from task')
     parser.add_argument('--genesets', default='GO_Biological_Process_2018,'
@@ -66,17 +66,35 @@ def run_enrichr(inputfile, theargs,
         return None
     with redirect_stdout(sys.stderr):
         res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets,
-                              cutoff=theargs.cutoff,
+                              cutoff=theargs.maxpval,
                               no_plot=True, outdir=theargs.tmpdir)
     df_result = res.res2d
     if df_result.shape[0] == 0:
         return None
-    df_result.sort_values('Adjusted P-value',
+    """
+    Example output:
+    >>> df_result
+          Gene_set                      Term  Overlap   P-value  Adjusted P-value  Old P-value  Old Adjusted P-value  Odds Ratio  Combined Score Genes
+    0  Jensen_DISEASES                 Keratosis     1/27  0.460766               1.0            0                     0    1.638807    1.269854e+00   TAT
+    1  Jensen_DISEASES  Hepatocellular carcinoma     1/29  0.484897               1.0            0                     0    1.525786    1.104393e+00   TAT
+    2  Jensen_DISEASES    Palmoplantar keratosis     1/31  0.507950               1.0            0                     0    1.427348    9.668460e-01   TAT
+    3  Jensen_DISEASES                 Keratitis     1/39  0.590316               1.0            0                     0    1.134559    5.980234e-01   TAT
+    4  Jensen_DISEASES   Intellectual disability    1/296  0.998903               1.0            0                     0    0.149486    1.641426e-04   TAT
+    5  Jensen_DISEASES                 Carcinoma  1/11318  0.999993               1.0            0                     0    0.003910    2.732093e-08   TAT
+    """
+    df_result.rename(columns={'Adjusted P-value': 'apv'}, inplace=True)
+    # filter out any rows where min overlap is not met
+    df_result.drop(df_result[df_result.apv > theargs.maxpval].index,
+                   inplace=True)
+    if df_result.shape[0] == 0:
+        return None
+    df_result.sort_values('apv',
                           ascending=True, inplace=True)
     df_result.reset_index(drop=True, inplace=True)
+    print(df_result)
     theres = {'name': df_result['Term'][0],
               'source': df_result['Gene_set'][0],
-              'p_value': df_result['Adjusted P-value'][0],
+              'p_value': df_result['apv'][0],
               'description': '',
               'term_size': int(df_result['Overlap'][0][df_result['Overlap'][0].index('/')+1:]),
               'intersections': df_result['Genes'][0].split(';')}
@@ -102,6 +120,7 @@ def main(args):
         {
          "name": "TERM",
          "source": "SOURCE OF TERM",
+         "sourceTermId": "IS THE ID FOR THE ENRICHED TERM/FUNCTIONAL CATEGORY IN ITS NATIVE NAMESPACE"
          "p_value": Adjusted P-value from Enrichr,
          "description": "EMPTY STRING",
          "intersections": "List of Genes that intersect"

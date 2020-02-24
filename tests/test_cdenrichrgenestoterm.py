@@ -52,7 +52,7 @@ class TestCdenrichrgenestoterm(unittest.TestCase):
         res = cdenrichrgenestoterm._parse_arguments('desc',
                                                       myargs)
         self.assertEqual('inputarg', res.input)
-        self.assertEqual(0.05, res.cutoff)
+        self.assertEqual(0.05, res.maxpval)
         self.assertEqual('/tmp', res.tmpdir)
         self.assertEqual('GO_Biological_Process_2018,' +
                          'GO_Cellular_Component_2018,' +
@@ -118,6 +118,68 @@ class TestCdenrichrgenestoterm(unittest.TestCase):
         finally:
             shutil.rmtree(temp_dir)
 
+    def test_run_gprofiler_with_valid_no_result_from_query(self):
+        temp_dir = tempfile.mkdtemp()
+        try:
+            enrichr = MagicMock()
+            mockres = MagicMock()
+            df = pd.DataFrame()
+            mockres.res2d = df
+            enrichr.enrichr = MagicMock(return_value=mockres)
+            tfile = os.path.join(temp_dir, 'foo')
+            with open(tfile, 'w') as f:
+                f.write('a,b,c')
+            myargs = [tfile, '--tmpdir', temp_dir]
+            theargs = cdenrichrgenestoterm._parse_arguments('desc',
+                                                            myargs)
+            res = cdenrichrgenestoterm.run_enrichr(tfile,
+                                                   theargs,
+                                                   enrichr=enrichr)
+            gs = self.get_default_genesets()
+            self.assertEqual(None, res)
+            enrichr.enrichr.assert_called_once_with(gene_list=['A', 'B', 'C'],
+                                                    cutoff=0.05,
+                                                    gene_sets=gs,
+                                                    no_plot=True,
+                                                    outdir=temp_dir)
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_run_gprofiler_with_pvalue_exceeded(self):
+        temp_dir = tempfile.mkdtemp()
+        try:
+            enrichr = MagicMock()
+            mockres = MagicMock()
+            df = pd.DataFrame(columns=['Term',
+                                       'Gene_set',
+                                       'Adjusted P-value',
+                                       'Genes', 'Overlap'],
+                              data=[['term1', 'set1',
+                                     0.6,
+                                     'B;C', '2/25'],
+                                    ['term2', 'set2',
+                                     0.7, 'A;C', '7/9']])
+            mockres.res2d = df
+            enrichr.enrichr = MagicMock(return_value=mockres)
+            tfile = os.path.join(temp_dir, 'foo')
+            with open(tfile, 'w') as f:
+                f.write('a,b,c')
+            myargs = [tfile, '--tmpdir', temp_dir]
+            theargs = cdenrichrgenestoterm._parse_arguments('desc',
+                                                            myargs)
+            res = cdenrichrgenestoterm.run_enrichr(tfile,
+                                                   theargs,
+                                                   enrichr=enrichr)
+            gs = self.get_default_genesets()
+            self.assertEqual(None, res)
+            enrichr.enrichr.assert_called_once_with(gene_list=['A', 'B', 'C'],
+                                                    cutoff=0.05,
+                                                    gene_sets=gs,
+                                                    no_plot=True,
+                                                    outdir=temp_dir)
+        finally:
+            shutil.rmtree(temp_dir)
+
     def test_run_gprofiler_with_valid_result(self):
         temp_dir = tempfile.mkdtemp()
         try:
@@ -128,10 +190,10 @@ class TestCdenrichrgenestoterm(unittest.TestCase):
                                        'Adjusted P-value',
                                        'Genes', 'Overlap'],
                               data=[['term1', 'set1',
-                                     0.5,
+                                     0.05,
                                      'B;C', '2/25'],
                                     ['term2', 'set2',
-                                     0.3, 'A;C', '7/9']])
+                                     0.03, 'A;C', '7/9']])
             mockres.res2d = df
             enrichr.enrichr = MagicMock(return_value=mockres)
             tfile = os.path.join(temp_dir, 'foo')
@@ -146,7 +208,7 @@ class TestCdenrichrgenestoterm(unittest.TestCase):
             gs = self.get_default_genesets()
             self.assertEqual('term2', res['name'])
             self.assertEqual('set2', res['source'])
-            self.assertEqual(0.3, res['p_value'])
+            self.assertEqual(0.03, res['p_value'])
             self.assertEqual('', res['description'])
             self.assertEqual(['A', 'C'], res['intersections'])
             self.assertEqual(9, res['term_size'])
