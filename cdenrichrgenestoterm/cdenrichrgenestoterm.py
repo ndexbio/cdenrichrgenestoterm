@@ -91,7 +91,6 @@ def run_enrichr(inputfile, theargs,
     df_result.sort_values('apv',
                           ascending=True, inplace=True)
     df_result.reset_index(drop=True, inplace=True)
-    print(df_result)
     theres = {'name': df_result['Term'][0],
               'source': df_result['Gene_set'][0],
               'p_value': df_result['apv'][0],
