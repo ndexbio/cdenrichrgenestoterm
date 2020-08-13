@@ -2,6 +2,12 @@
 History
 =======
 
+0.3.1 (2020-08-13)
+----------------------
+
+* Removed debugging print statement that was sending debugging output
+to standard output causing CDAPS app to fail.
+
 0.2.0 (2019-12-13)
 --------------------
 
