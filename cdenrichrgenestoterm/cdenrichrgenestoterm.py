@@ -53,7 +53,8 @@ def read_inputfile(inputfile):
 
 
 def run_enrichr(inputfile, theargs,
-                enrichr=gseapy):
+                enrichr=gseapy,
+                retry_count=2):
     """
     todo
     :param inputfile:
@@ -68,8 +69,12 @@ def run_enrichr(inputfile, theargs,
         res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets,
                               cutoff=theargs.maxpval,
                               no_plot=True, outdir=theargs.tmpdir)
+        sys.stderr.write('res object: ' + str(res) + '\n')
+        sys.stderr.write('res.res2d object: ' + str(res.res2d) + '\n')
+
     df_result = res.res2d
     if df_result.shape[0] == 0:
+        sys.stderr.write('Empty data frame\n')
         return None
     """
     Example output:
@@ -87,6 +92,7 @@ def run_enrichr(inputfile, theargs,
     df_result.drop(df_result[df_result.apv > theargs.maxpval].index,
                    inplace=True)
     if df_result.shape[0] == 0:
+        sys.stderr.write('Empty data frame after p value filter\n')
         return None
     df_result.sort_values('apv',
                           ascending=True, inplace=True)
@@ -97,7 +103,7 @@ def run_enrichr(inputfile, theargs,
               'description': '',
               'term_size': int(df_result['Overlap'][0][df_result['Overlap'][0].index('/')+1:]),
               'intersections': df_result['Genes'][0].split(';')}
-
+    sys.stderr.write('About to return this fragment: ' + str(theres) + '\n')
     return theres
 
 
@@ -132,6 +138,7 @@ def main(args):
     try:
         inputfile = os.path.abspath(theargs.input)
         theres = run_enrichr(inputfile, theargs)
+        sys.stderr.flush()
         if theres is None:
             sys.stderr.write('No terms found\n')
         else:
@@ -141,6 +148,8 @@ def main(args):
     except Exception as e:
         sys.stderr.write('Caught exception: ' + str(e))
         return 2
+    finally:
+        sys.stderr.flush()
 
 
 if __name__ == '__main__':  # pragma: no cover

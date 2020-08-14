@@ -106,6 +106,29 @@ class TestCdhidefInDocker(unittest.TestCase):
         finally:
             shutil.rmtree(temp_dir)
 
+    def test_run_enrichr_ud1214_items_may_take_one_minute(self):
+        temp_dir = tempfile.mkdtemp(dir=os.getenv('CDENRICHR_TMPDIR'))
+        try:
+            gene_list = 'NPPB,NPR3,NPPC,NPR1,CRP,ELF1,NPR2,PAX5,NPPA,MME,SMUG1,ELF2,GUCY2C'
+            input_file = os.path.join(temp_dir, 'input.txt')
+            with open(input_file, 'w') as f:
+                f.write(gene_list + '\n')
+            ecode, out, err = self.run_enrichr_docker([input_file],
+                                                      temp_dir=temp_dir)
+            self.assertEqual(0, ecode)
+
+            res = json.loads(out)
+            print(out)
+            self.assertEqual(6, len(res.keys()))
+            self.assertEqual('Hypertension', res['name'])
+            self.assertEqual('Jensen_DISEASES', res['source'])
+            self.assertEqual('', res['description'])
+            self.assertEqual(289, res['term_size'])
+            self.assertEqual(8, len(res['intersections']))
+
+        finally:
+            shutil.rmtree(temp_dir)
+
 
 if __name__ == '__main__':
     sys.exit(unittest.main())
