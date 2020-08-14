@@ -109,10 +109,12 @@ def run_enrichr(inputfile, theargs,
     df_result.reset_index(drop=True, inplace=True)
     theres = {'name': df_result['Term'][0],
               'source': df_result['Gene_set'][0],
+              'sourceTermId': '',
               'p_value': df_result['apv'][0],
               'description': '',
               'term_size': int(df_result['Overlap'][0][df_result['Overlap'][0].index('/')+1:]),
               'intersections': df_result['Genes'][0].split(';')}
+    theres['jaccard'] = round(len(theres['intersections'])/len(genes), 3)
     sys.stderr.write('About to return this fragment: ' + str(theres) + '\n')
     return theres
 
