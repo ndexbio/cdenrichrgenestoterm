@@ -39,6 +39,7 @@ def _parse_arguments(desc, args):
                                               'Jensen_DISEASES',
                         help='Gene sets to enrich against. '
                              'Should be comma delimited')
+    parser.add_argument('--organism')
     return parser.parse_args(args)
 
 
@@ -69,7 +70,7 @@ def run_enrichr(inputfile, theargs,
     with redirect_stdout(sys.stderr):
         while cur_try <= retry_count:
             try:
-                res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets,
+                res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets.split(','),
                                       cutoff=theargs.maxpval,
                                       no_plot=True, outdir=theargs.tmpdir)
                 break
