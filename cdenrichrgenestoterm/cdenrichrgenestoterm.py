@@ -65,10 +65,20 @@ def run_enrichr(inputfile, theargs,
     if genes is None or (len(genes) == 1 and len(genes[0].strip()) == 0):
         sys.stderr.write('No genes found in input')
         return None
+    cur_try = 1
     with redirect_stdout(sys.stderr):
-        res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets,
-                              cutoff=theargs.maxpval,
-                              no_plot=True, outdir=theargs.tmpdir)
+        while cur_try <= retry_count:
+            try:
+                res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets,
+                                      cutoff=theargs.maxpval,
+                                      no_plot=True, outdir=theargs.tmpdir)
+                break
+            except Exception as e:
+                sys.stderr.write('Try # ' + str(cur_try) + ' caught exception: ' + str(e))
+                cur_try += 1
+                if cur_try > retry_count:
+                    sys.stderr.write('Retries exceeded')
+                    return None
         sys.stderr.write('res object: ' + str(res) + '\n')
         sys.stderr.write('res.res2d object: ' + str(res.res2d) + '\n')
 
