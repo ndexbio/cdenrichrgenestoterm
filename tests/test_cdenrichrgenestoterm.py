@@ -275,7 +275,7 @@ class TestCdenrichrgenestoterm(unittest.TestCase):
 
             # make a directory with .txt ending just for fun
             os.makedirs(os.path.join(temp_dir, 'haha.txt'), mode=0o755)
-            
+
             enrichr.enrichr = MagicMock(return_value=enrichr)
             tfile = os.path.join(temp_dir, 'foo')
             with open(tfile, 'w') as f:
