@@ -4,11 +4,15 @@ import os
 import sys
 import argparse
 import json
+import pandas
 from contextlib import redirect_stdout
 
 with redirect_stdout(sys.stderr):
     import gseapy
 
+
+ADJUSTED_PVALUE = 'Adjusted P-value'
+PVALUE = 'P-value'
 
 class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
     pass
@@ -32,14 +36,9 @@ def _parse_arguments(desc, args):
                         help='Temp directory to hold output from task')
     parser.add_argument('--genesets', default='GO_Biological_Process_2018,'
                                               'GO_Cellular_Component_2018,'
-                                              'GO_Molecular_Function_2018,'
-                                              'KEGG_2019_Human,Reactome_2016,'
-                                              'WikiPathways_2019_Human,'
-                                              'Human_Phenotype_Ontology,'
-                                              'Jensen_DISEASES',
+                                              'GO_Molecular_Function_2018',
                         help='Gene sets to enrich against. '
                              'Should be comma delimited')
-    parser.add_argument('--organism')
     return parser.parse_args(args)
 
 
@@ -51,6 +50,32 @@ def read_inputfile(inputfile):
     """
     with open(inputfile, 'r') as f:
         return f.read()
+
+
+def load_data_frame_from_outputfiles(outdir=None):
+    """
+    Loads all files ending with `.txt` loading them
+    into a single pandas data frame
+    :param outdir:
+    :return: combined data of .txt files into single pandas data frame
+    :rtype: :py:class:`pandas.DataFrame`
+    """
+    d_frames = []
+    for entry in os.listdir(outdir):
+        if not entry.endswith('.txt'):
+            continue
+        full_path = os.path.join(outdir, entry)
+        if not os.path.isfile(full_path):
+            continue
+        df = pandas.read_csv(full_path, delimiter='\t', header=0)
+        d_frames.append(df)
+
+    if len(d_frames) == 0:
+        return pandas.DataFrame()
+
+    mega_df = pandas.concat(d_frames)
+    mega_df.reset_index(drop=True, inplace=True)
+    return mega_df
 
 
 def run_enrichr(inputfile, theargs,
@@ -70,9 +95,9 @@ def run_enrichr(inputfile, theargs,
     with redirect_stdout(sys.stderr):
         while cur_try <= retry_count:
             try:
-                res = enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets.split(','),
-                                      cutoff=theargs.maxpval,
-                                      no_plot=True, outdir=theargs.tmpdir)
+                enrichr.enrichr(gene_list=genes, gene_sets=theargs.genesets,
+                                cutoff=theargs.maxpval,
+                                no_plot=True, outdir=theargs.tmpdir)
                 break
             except Exception as e:
                 sys.stderr.write('Try # ' + str(cur_try) + ' caught exception: ' + str(e))
@@ -80,10 +105,8 @@ def run_enrichr(inputfile, theargs,
                 if cur_try > retry_count:
                     sys.stderr.write('Retries exceeded')
                     return None
-        sys.stderr.write('res object: ' + str(res) + '\n')
-        sys.stderr.write('res.res2d object: ' + str(res.res2d) + '\n')
 
-    df_result = res.res2d
+    df_result = load_data_frame_from_outputfiles(outdir=theargs.tmpdir)
     if df_result.shape[0] == 0:
         sys.stderr.write('Empty data frame\n')
         return None
@@ -98,25 +121,24 @@ def run_enrichr(inputfile, theargs,
     4  Jensen_DISEASES   Intellectual disability    1/296  0.998903               1.0            0                     0    0.149486    1.641426e-04   TAT
     5  Jensen_DISEASES                 Carcinoma  1/11318  0.999993               1.0            0                     0    0.003910    2.732093e-08   TAT
     """
-    df_result.rename(columns={'Adjusted P-value': 'apv'}, inplace=True)
     # filter out any rows where min overlap is not met
-    df_result.drop(df_result[df_result.apv > theargs.maxpval].index,
+    df_result.drop(df_result[df_result[ADJUSTED_PVALUE] > theargs.maxpval].index,
                    inplace=True)
     if df_result.shape[0] == 0:
         sys.stderr.write('Empty data frame after p value filter\n')
         return None
-    df_result.sort_values('apv',
+    df_result.sort_values([ADJUSTED_PVALUE, PVALUE],
                           ascending=True, inplace=True)
+
     df_result.reset_index(drop=True, inplace=True)
     theres = {'name': df_result['Term'][0],
               'source': df_result['Gene_set'][0],
               'sourceTermId': '',
-              'p_value': df_result['apv'][0],
+              'p_value': df_result[ADJUSTED_PVALUE][0],
               'description': '',
               'term_size': int(df_result['Overlap'][0][df_result['Overlap'][0].index('/')+1:]),
               'intersections': df_result['Genes'][0].split(';')}
     theres['jaccard'] = round(len(theres['intersections'])/len(genes), 3)
-    sys.stderr.write('About to return this fragment: ' + str(theres) + '\n')
     return theres
 
 
@@ -129,11 +151,11 @@ def main(args):
     :rtype: int
     """
     desc = """
-        Running Enrichr via gseapy .
+        Running Enrichr via gseapy 0.10.1 .
 
         Takes file with comma delimited list of genes as input and
         outputs best matching term (as determined by Adjusted P value)
-        if any in json format:
+        if any in JSON format:
         
         {
          "name": "TERM",

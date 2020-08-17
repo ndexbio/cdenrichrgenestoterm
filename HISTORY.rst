@@ -8,6 +8,9 @@ History
 * Removed debugging print statement that was sending debugging output
 to standard output causing CDAPS app to fail.
 
+* Fixed bug where best hit from last gene set input was
+  returned instead of best hit from any of the gene sets
+
 0.2.0 (2019-12-13)
 --------------------
 
