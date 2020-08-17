@@ -15,9 +15,6 @@ import tempfile
 import shutil
 import json
 import subprocess
-import stat
-from unittest.mock import MagicMock
-from cdenrichrgenestoterm import cdenrichrgenestoterm
 
 
 SKIP_REASON = 'CDENRICHR_DOCKER_IMAGE, CDENRICHR_DOCKER, CDENRICHR_TMPDIR environment ' \
@@ -69,13 +66,12 @@ class TestCdhidefInDocker(unittest.TestCase):
             ecode, out, err = self.run_enrichr_docker([input_file],
                                                       temp_dir=temp_dir)
             self.assertEqual(0, ecode)
-
             res = json.loads(out)
-            self.assertEqual(6, len(res.keys()))
-            self.assertEqual('Chronic granulomatous disease', res['name'])
-            self.assertEqual('Jensen_DISEASES', res['source'])
+            self.assertEqual(8, len(res.keys()))
+            self.assertEqual('secondary lysosome (GO:0005767)', res['name'])
+            self.assertEqual('GO_Cellular_Component_2018', res['source'])
             self.assertEqual('', res['description'])
-            self.assertEqual(5, res['term_size'])
+            self.assertEqual(13, res['term_size'])
             self.assertEqual(3, len(res['intersections']))
 
         finally:
@@ -95,8 +91,7 @@ class TestCdhidefInDocker(unittest.TestCase):
             self.assertEqual(0, ecode)
 
             res = json.loads(out)
-            print(out)
-            self.assertEqual(6, len(res.keys()))
+            self.assertEqual(8, len(res.keys()))
             self.assertEqual('Neurofibromatosis', res['name'])
             self.assertEqual('Jensen_DISEASES', res['source'])
             self.assertEqual('', res['description'])
@@ -118,13 +113,12 @@ class TestCdhidefInDocker(unittest.TestCase):
             self.assertEqual(0, ecode)
 
             res = json.loads(out)
-            print(out)
-            self.assertEqual(6, len(res.keys()))
-            self.assertEqual('Hypertension', res['name'])
-            self.assertEqual('Jensen_DISEASES', res['source'])
+            self.assertEqual(8, len(res.keys()))
+            self.assertEqual('receptor guanylyl cyclase signaling pathway (GO:0007168)', res['name'])
+            self.assertEqual('GO_Biological_Process_2018', res['source'])
             self.assertEqual('', res['description'])
-            self.assertEqual(289, res['term_size'])
-            self.assertEqual(8, len(res['intersections']))
+            self.assertEqual(10, res['term_size'])
+            self.assertEqual(6, len(res['intersections']))
 
         finally:
             shutil.rmtree(temp_dir)
