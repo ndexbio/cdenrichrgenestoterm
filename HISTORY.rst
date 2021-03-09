@@ -2,6 +2,13 @@
 History
 =======
 
+0.4.0 (2021-03-09)
+----------------------
+
+* Updated to use gseapy 0.10.4 because Enrichr API changed hostname
+  and older versions no longer worked 
+  `Issue #2 <https://github.com/idekerlab/cdenrichrgenestoterm/issues/2>`_
+
 0.3.1 (2020-08-13)
 ----------------------
 
