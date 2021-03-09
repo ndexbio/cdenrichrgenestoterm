@@ -151,7 +151,7 @@ def main(args):
     :rtype: int
     """
     desc = """
-        Running Enrichr via gseapy 0.10.1 .
+        Running Enrichr via gseapy 0.10.4 
 
         Takes file with comma delimited list of genes as input and
         outputs best matching term (as determined by Adjusted P value)
