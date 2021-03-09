@@ -1,7 +1,7 @@
 FROM continuumio/miniconda3
 
 RUN pip install pandas
-RUN pip install gseapy==0.10.1 --ignore-installed
+RUN pip install gseapy==0.10.4 --ignore-installed
 
 RUN mkdir /tmp/cdenrichr
 COPY dist/*.whl /tmp/cdenrichr/
