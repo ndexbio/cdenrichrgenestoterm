@@ -15,11 +15,11 @@ Dependencies
 Direct invocation
 ------------------
 
-Version `0.3.0` can be directly pulled from `Dockerhub <https://hub.docker.com/>`_ with this command:
+Version `0.4.0` can be directly pulled from `Dockerhub <https://hub.docker.com/>`_ with this command:
 
 .. code-block::
 
-   docker pull coleslawndex/cdenrichrgenestoterm:0.3.0
+   docker pull coleslawndex/cdenrichrgenestoterm:0.4.0
 
 Building
 --------
@@ -63,7 +63,7 @@ Usage
 
 .. code-block::
 
-   docker run -v coleslawndex/cdenrichrgenestoterm:0.3.0 -h
+   docker run -v coleslawndex/cdenrichrgenestoterm:0.4.0 -h
 
 
 
